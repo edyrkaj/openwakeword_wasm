@@ -5,6 +5,11 @@
   "main": "src/index.js",
   "type": "module",
   "module": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dnavarrom/openwakeword_wasm.git"
+  },
+  "homepage": "https://github.com/dnavarrom/openwakeword_wasm/tree/main",
   "files": [
     "src",
     "models",

@@ -1,6 +1,10 @@
 # OpenWakeWord WASM (browser)
 
+Inspired by [Miro Hristov’s Deep Core Labs write-up](https://deepcorelabs.com/open-wake-word-on-the-web/), this package brings the same browser-only wake-word pipeline into a reusable npm module. A full React sandbox lives in this repo as well: [openwakeword_wasm_react_demo](https://github.com/dnavarrom/openwakeword_wasm/tree/main/openwakeword_wasm_react_demo).
+
 Small browser-first wrapper around the OpenWakeWord models using `onnxruntime-web`. It exposes a `WakeWordEngine` class you can drop into a React app to listen for wake words like `hey_jarvis` directly in Chrome, no native layer required.
+
+Agents should read AGENTS.md to get details and onboarding instructions. 
 
 ## Installation
 
