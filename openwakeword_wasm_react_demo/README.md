@@ -2,7 +2,7 @@
 
 Playground for the `openwakeword-wasm-browser` engine. 
 
-![Wake word demo screenshot](./demo.png)
+![Wake word demo screenshot](demo.png)
 
 ## Prerequisites
 
