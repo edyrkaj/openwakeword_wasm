@@ -55,6 +55,10 @@ export class WakeWordEngine {
     constructor({
         keywords = ['hey_jarvis'],
         modelFiles = MODEL_FILE_MAP,
+        // Map of onnx filename -> { path, data } for ORT Web external weights.
+        // `path` must match the protobuf external "location"; `data` is a URL
+        // (absolute or relative to baseAssetUrl) where the browser can fetch it.
+        externalDataFiles = {},
         baseAssetUrl = '/models',
         ortWasmPath,
         frameSize = 1280,
@@ -69,6 +73,7 @@ export class WakeWordEngine {
         this.config = {
             keywords,
             modelFiles,
+            externalDataFiles,
             baseAssetUrl,
             frameSize,
             sampleRate,
@@ -104,15 +109,41 @@ export class WakeWordEngine {
         this._emitter.off(event, handler);
     }
 
+    _sessionOptionsFor(file, baseOptions, resolver) {
+        const external = this.config.externalDataFiles?.[file];
+        if (!external) return baseOptions;
+        const dataRef = typeof external === 'string' ? external : external.data;
+        const locationPath = typeof external === 'string' ? external : external.path;
+        if (!dataRef || !locationPath) {
+            throw new Error(`externalDataFiles["${file}"] requires path and data`);
+        }
+        const dataUrl = dataRef.startsWith('/') || /^[a-z]+:\/\//i.test(dataRef)
+            ? dataRef
+            : resolver(dataRef);
+        return {
+            ...baseOptions,
+            externalData: [{ path: locationPath, data: dataUrl }],
+        };
+    }
+
     async load() {
         if (this._loaded) return;
         const sessionOptions = { executionProviders: this.config.executionProviders };
         const resolver = (file) => `${this.config.baseAssetUrl.replace(/\/+$/, '')}/${file}`;
         this._debug('Loading core models with options', sessionOptions);
 
-        this._melspecModel = await ort.InferenceSession.create(resolver('melspectrogram.onnx'), sessionOptions);
-        this._embeddingModel = await ort.InferenceSession.create(resolver('embedding_model.onnx'), sessionOptions);
-        this._vadModel = await ort.InferenceSession.create(resolver('silero_vad.onnx'), sessionOptions);
+        this._melspecModel = await ort.InferenceSession.create(
+            resolver('melspectrogram.onnx'),
+            this._sessionOptionsFor('melspectrogram.onnx', sessionOptions, resolver)
+        );
+        this._embeddingModel = await ort.InferenceSession.create(
+            resolver('embedding_model.onnx'),
+            this._sessionOptionsFor('embedding_model.onnx', sessionOptions, resolver)
+        );
+        this._vadModel = await ort.InferenceSession.create(
+            resolver('silero_vad.onnx'),
+            this._sessionOptionsFor('silero_vad.onnx', sessionOptions, resolver)
+        );
 
         this._keywordModels = {};
         let maxWindowSize = this.config.embeddingWindowSize;
@@ -121,7 +152,8 @@ export class WakeWordEngine {
             if (!file) {
                 throw new Error(`No model file configured for keyword "${keyword}"`);
             }
-            const session = await ort.InferenceSession.create(resolver(file), sessionOptions);
+            const keywordOptions = this._sessionOptionsFor(file, sessionOptions, resolver);
+            const session = await ort.InferenceSession.create(resolver(file), keywordOptions);
             const windowSize = this._inferKeywordWindowSize(session) ?? this.config.embeddingWindowSize;
             maxWindowSize = Math.max(maxWindowSize, windowSize);
             const history = [];
@@ -134,7 +166,7 @@ export class WakeWordEngine {
                 windowSize,
                 history
             };
-            this._debug('Loaded keyword model', { keyword, file, windowSize });
+            this._debug('Loaded keyword model', { keyword, file, windowSize, hasExternalData: Boolean(keywordOptions.externalData) });
         }
         this._embeddingWindowSize = maxWindowSize;
         this._debug('Embedding window size resolved', this._embeddingWindowSize);
@@ -402,3 +434,5 @@ export class WakeWordEngine {
         this._debug('Active keywords updated', Array.from(this._activeKeywords));
     }
 }
+
+export default WakeWordEngine;
