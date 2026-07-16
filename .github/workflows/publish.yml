@@ -38,7 +38,8 @@ jobs:
           PKG=$(node -p "require('./package.json').version")
           test "$TAG" = "$PKG" || { echo "::error::tag v$TAG != package.json $PKG"; exit 1; }
 
-      # Do NOT set NODE_AUTH_TOKEN — that forces the legacy token path and can
-      # reintroduce EOTP. OIDC trusted publishing is preferred when configured.
+      # Auth: npm Trusted Publishing (OIDC). Requires package Settings → Trusted
+      # Publisher → GitHub: edyrkaj / openwakeword_wasm / publish.yml.
+      # Do not set NODE_AUTH_TOKEN here (forces token path → EOTP with 2FA).
       - name: Publish
         run: npm publish --access public
