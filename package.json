@@ -1,23 +1,30 @@
 {
-  "name": "openwakeword-wasm-browser",
-  "version": "0.1.0",
+  "name": "@edyrkaj/openwakeword-wasm-browser",
+  "version": "1.0.0",
   "description": "Wake word detection for the browser using onnxruntime-web and OpenWakeWord models (hey_jarvis, hey_mycroft, alexa, etc).",
   "main": "src/index.js",
   "type": "module",
   "module": "src/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dnavarrom/openwakeword_wasm.git"
+    "url": "git+https://github.com/edyrkaj/openwakeword_wasm.git"
   },
-  "homepage": "https://github.com/dnavarrom/openwakeword_wasm/tree/main",
+  "homepage": "https://github.com/edyrkaj/openwakeword_wasm#readme",
+  "bugs": {
+    "url": "https://github.com/edyrkaj/openwakeword_wasm/issues"
+  },
   "files": [
     "src",
-    "models",
     "README.md"
   ],
   "scripts": {
     "lint": "echo \"no lint configured\"",
-    "test": "echo \"no tests configured\""
+    "test": "echo \"no tests configured\"",
+    "prepack:check": "node scripts/prepublish-check.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
     "onnxruntime-web": "^1.23.2"

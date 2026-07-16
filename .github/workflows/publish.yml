@@ -1,0 +1,52 @@
+name: Publish npm package
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Gate — pack must not include models (AD-2 / AD-6)
+        run: |
+          set -euo pipefail
+          TARBALL=$(npm pack --json | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const j=JSON.parse(s);console.log(j[0].filename)})")
+          echo "Packed: $TARBALL"
+          if tar -tzf "$TARBALL" | grep -E '(^|/)models/|\.onnx$|\.tflite$'; then
+            echo "::error::Tarball must not contain models/ or model binaries (library-only)"
+            exit 1
+          fi
+          rm -f "$TARBALL"
+
+      - name: Gate — README documents scoped name + externalDataFiles (AD-6)
+        run: |
+          set -euo pipefail
+          grep -q '@edyrkaj/openwakeword-wasm-browser' README.md
+          grep -q 'externalDataFiles' README.md
+
+      - name: Tag / package.json version must match
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./package.json').version")
+          test "$TAG" = "$PKG" || { echo "::error::tag v$TAG != package.json $PKG"; exit 1; }
+
+      - name: Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

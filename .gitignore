@@ -20,3 +20,12 @@ yarn-debug.log*
 yarn-error.log*
 /.venv
 .venv
+
+# npm config
+.npmrc
+
+# bmad
+_bmad-output/
+
+# npm pack artifacts
+*.tgz
