@@ -1,6 +1,6 @@
 {
   "name": "@edyrkaj/openwakeword-wasm-browser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Wake word detection for the browser using onnxruntime-web and OpenWakeWord models (hey_jarvis, hey_mycroft, alexa, etc).",
   "main": "src/index.js",
   "type": "module",
