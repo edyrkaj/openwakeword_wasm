@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { readFileSync, unlinkSync } from 'node:fs';
+import { existsSync, readdirSync, unlinkSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -14,12 +14,31 @@ for (const needle of ['@edyrkaj/openwakeword-wasm-browser', 'externalDataFiles']
   }
 }
 
-const packJson = execFileSync('npm', ['pack', '--json'], {
+const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
+const expectedName = pkg.name.startsWith('@')
+  ? `${pkg.name.slice(1).replace('/', '-')}-${pkg.version}.tgz`
+  : `${pkg.name}-${pkg.version}.tgz`;
+
+const before = new Set(readdirSync(root).filter((name) => name.endsWith('.tgz')));
+
+execFileSync('npm', ['pack'], {
   cwd: root,
   encoding: 'utf8',
-  stdio: ['ignore', 'pipe', 'pipe'],
+  stdio: ['ignore', 'pipe', 'inherit'],
 });
-const [{ filename }] = JSON.parse(packJson);
+
+const created = readdirSync(root)
+  .filter((name) => name.endsWith('.tgz') && !before.has(name));
+
+const filename = created.includes(expectedName)
+  ? expectedName
+  : created[0] ?? (existsSync(path.join(root, expectedName)) ? expectedName : null);
+
+if (!filename) {
+  console.error('FAIL: npm pack did not produce a .tgz');
+  process.exit(1);
+}
+
 const listing = execFileSync('tar', ['-tzf', filename], {
   cwd: root,
   encoding: 'utf8',
