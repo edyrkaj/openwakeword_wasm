@@ -6,7 +6,7 @@ Small browser-first wrapper around the OpenWakeWord models using `onnxruntime-we
 
 Agents should read AGENTS.md to get details and onboarding instructions.
 
-**Package:** [`@edyrkaj/openwakeword-wasm-browser`](https://www.npmjs.com/package/@edyrkaj/openwakeword-wasm-browser) — library code only. ONNX models are **not** published on npm; copy them from this repo’s `models/` folder (or host them yourself) and point `baseAssetUrl` at that location.
+**Package:** `[@edyrkaj/openwakeword-wasm-browser](https://www.npmjs.com/package/@edyrkaj/openwakeword-wasm-browser)` — library code only. ONNX models are **not** published on npm; copy them from this repo’s `models/` folder (or host them yourself) and point `baseAssetUrl` at that location.
 
 ## Installation
 
@@ -57,6 +57,8 @@ export default function WakeWordDemo() {
 }
 ```
 
+
+
 ### Vanilla example
 
 ```js
@@ -81,7 +83,9 @@ document.querySelector('#keyword').addEventListener('change', (evt) => {
 });
 ```
 
-### External weight files (`externalDataFiles`)
+
+
+### External weight files (`externalDataFiles`) (new)
 
 `externalDataFiles` — optional map of ONNX filename → string URL **or** `{ path, data }` for ORT Web external weights.
 
@@ -107,6 +111,8 @@ const engine = new WakeWordEngine({
 });
 ```
 
+
+
 ## API reference
 
 - `await engine.load()` downloads ONNX models (mel, embedding, VAD, keyword heads) and infers keyword window sizes.
@@ -117,12 +123,16 @@ const engine = new WakeWordEngine({
 - `engine.setActiveKeywords(name[])` gates which keywords are allowed to emit `detect`.
 - Constructor option `externalDataFiles` — see [External weight files](#external-weight-files-externaldatafiles).
 
+
+
 ### Events
 
 - `ready` fires once models finish loading.
 - `detect` surfaces `{ keyword, score, at }` when score > threshold, VAD hangover is active, and cooldown is clear.
 - `speech-start` / `speech-end` mirror the VAD state transitions.
 - `error` emits any pipeline failures (getUserMedia, onnxruntime, decoding issues).
+
+
 
 ### Asset layout
 
@@ -150,9 +160,12 @@ Then instantiate with `baseAssetUrl: '/openwakeword/models'` and `ortWasmPath: '
 - VAD hangover is tuned to 12 frames to keep speech open long enough for the wake word score to peak.
 - Cooldown (`cooldownMs`) prevents multiple detections per utterance; lower if you want rapid-fire triggers.
 
+
+
 ### Publishing / packaging
 
 - The published package includes `src/` and `README.md` only (library-only). Models stay in the git repo for demos and self-hosting.
 - Releases: push an annotated tag `vX.Y.Z` matching `package.json` `version`; GitHub Actions runs pack/docs gates and `npm publish --access public`.
 - Before a release, run `npm run prepack:check` (or `npm pack`) and confirm the tarball has no `models/`.
 - Consider running `engine.runWav()` against `hey_jarvis_11-2.wav` before tagging to verify scoring still peaks near 1.0.
+
